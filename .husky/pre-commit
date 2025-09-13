@@ -2,3 +2,8 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npx --no-install lint-staged
+
+# Ensure Node.js bin directory is in PATH for npx
+export PATH="$(npm bin):$PATH"
+
+npx --no-install lint-staged

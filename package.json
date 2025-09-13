@@ -14,9 +14,16 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "@mui/x-charts": "^8.11.2",
+    "@mui/x-data-grid": "^8.11.2",
+    "@mui/x-date-pickers": "^8.11.2",
+    "@mui/x-tree-view": "^8.11.2",
+    "@react-spring/web": "^10.0.2",
+    "dayjs": "^1.11.18",
     "next": "15.5.3",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "recharts": "^3.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,6 +31,7 @@
     "@types/node": "^20",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@types/recharts": "^1.8.29",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "husky": "^8.0.0",
