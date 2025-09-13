@@ -1,7 +1,11 @@
 import * as React from 'react';
-import DashboardLayout from '../layout/DashboardLayout';
+import PageLayout from '../layout/PageLayout';
+import ComingSoon from '../component/ComingSoon';
 
 export default function HomePage() {
-  return <DashboardLayout />;
+  return (
+    <PageLayout>
+      <ComingSoon />
+    </PageLayout>
+  );
 }
-
