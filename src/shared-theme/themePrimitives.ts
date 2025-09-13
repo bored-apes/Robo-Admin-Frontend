@@ -19,7 +19,10 @@ declare module '@mui/material/styles' {
     900: string;
   }
 
-  interface PaletteColor extends ColorRange {}
+  interface PaletteColor extends ColorRange {
+    // Add a dummy property to avoid empty interface
+    _paletteColorBrand?: string;
+  }
 
   interface Palette {
     baseShadow: string;
@@ -394,7 +397,7 @@ export const shape = {
   borderRadius: 8,
 };
 
-// @ts-ignore
+// @ts-expect-error - Shadows type expects a specific structure, but we are customizing the array for theme overrides
 const defaultShadows: Shadows = [
   'none',
   'var(--template-palette-baseShadow)',

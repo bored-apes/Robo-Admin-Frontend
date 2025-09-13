@@ -8,7 +8,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker, DatePickerFieldProps } from '@mui/x-date-pickers/DatePicker';
 import { useParsedFormat, usePickerContext, useSplitFieldProps } from '@mui/x-date-pickers';
 
-interface ButtonFieldProps extends DatePickerFieldProps {}
+type ButtonFieldProps = DatePickerFieldProps;
 
 function ButtonField(props: ButtonFieldProps) {
   const { forwardedProps } = useSplitFieldProps(props, 'date');
