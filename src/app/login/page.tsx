@@ -2,22 +2,23 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
+import CircularProgress from '@mui/material/CircularProgress';
 import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import ForgotPassword from '../../../components/auth/login/ForgotPassword';
-import AppTheme from '../../../shared-theme/AppTheme';
-import ColorModeSelect from '../../../shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../../../components/auth/login/CustomIcons';
+
+import ForgotPassword from '../../components/login/ForgotPassword';
+import AppTheme from '../../shared-theme/AppTheme';
+import ColorModeSelect from '../../shared-theme/ColorModeSelect';
+
+import { useLogin } from '../../hooks/useLogin';
+import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '../../hooks/useAuthCheck';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -60,38 +61,28 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
+  const router = useRouter();
+  const { isLoggedIn, loading: authLoading } = useAuthCheck();
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      router.replace('/');
+    }
+  }, [isLoggedIn, router]);
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [formError, setFormError] = React.useState('');
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const { login, loading } = useLogin();
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
-  };
+  const handleClose = () => setOpen(false);
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
-
     let isValid = true;
-
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
       setEmailError(true);
       setEmailErrorMessage('Please enter a valid email address.');
@@ -100,7 +91,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       setEmailError(false);
       setEmailErrorMessage('');
     }
-
     if (!password.value || password.value.length < 6) {
       setPasswordError(true);
       setPasswordErrorMessage('Password must be at least 6 characters long.');
@@ -109,9 +99,35 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       setPasswordError(false);
       setPasswordErrorMessage('');
     }
-
     return isValid;
   };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError('');
+    if (!validateInputs()) return;
+    const data = new FormData(event.currentTarget);
+    const email = data.get('email') as string;
+    const password = data.get('password') as string;
+    try {
+      await login({ email, password });
+      router.push('/');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'message' in err) {
+        setFormError((err as { message?: string }).message || 'Login failed');
+      } else {
+        setFormError('Login failed');
+      }
+    }
+  };
+
+  if (authLoading || isLoggedIn) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <AppTheme {...props}>
@@ -119,7 +135,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       <SignInContainer direction="column" justifyContent="space-between">
         <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
         <Card variant="outlined">
-          <SitemarkIcon />
           <Typography
             component="h1"
             variant="h4"
@@ -172,52 +187,37 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
             <ForgotPassword open={open} handleClose={handleClose} />
-            <Button type="submit" fullWidth variant="contained" onClick={validateInputs}>
-              Sign in
-            </Button>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: 'center' }}
-            >
-              Forgot your password?
-            </Link>
-          </Box>
-          <Divider>or</Divider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {formError && (
+              <Typography color="error" variant="body2" sx={{ mb: 1 }}>
+                {formError}
+              </Typography>
+            )}
             <Button
+              type="submit"
               fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Google')}
-              startIcon={<GoogleIcon />}
+              variant="contained"
+              disabled={loading}
+              sx={{ position: 'relative' }}
             >
-              Sign in with Google
+              {loading ? (
+                <>
+                  <CircularProgress
+                    size={22}
+                    color="success"
+                    sx={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      marginTop: '-11px',
+                      marginLeft: '-11px',
+                    }}
+                  />
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button>
-            <Typography sx={{ textAlign: 'center' }}>
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/material-ui/getting-started/templates/sign-in/"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-              >
-                Sign up
-              </Link>
-            </Typography>
           </Box>
         </Card>
       </SignInContainer>

@@ -2,6 +2,6 @@
 import * as React from 'react';
 import Dashboard from './view/Dashboard';
 
-export default function DashboardPage() {
+export default function Page() {
   return <Dashboard />;
 }
