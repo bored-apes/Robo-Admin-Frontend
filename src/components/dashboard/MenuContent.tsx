@@ -8,6 +8,8 @@ import Stack from '@mui/material/Stack';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import AnalyticsRoundedIcon from '@mui/icons-material/AnalyticsRounded';
 import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
+import PaidIcon from '@mui/icons-material/Paid';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
@@ -16,7 +18,9 @@ import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon /> },
   { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Clients', icon: <PeopleRoundedIcon /> },
+  { text: 'Orders', icon: <PaidIcon /> },
+  { text: 'Users', icon: <PeopleRoundedIcon /> },
+  { text: 'Investments', icon: <AccountBalanceWalletIcon /> },
   { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
 ];
 

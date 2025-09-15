@@ -1,30 +1,21 @@
-import { useEffect, useState } from 'react';
-import { fetchProfile } from '../services/authService';
+import { useUserProfile } from './useUserProfile';
 
 export function useAuthCheck() {
-  const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(false);
-  const [error, setError] = useState<string | null>(null);
+  const { profile, isLoading, isError, error } = useUserProfile();
 
-  useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!token) {
-      setLoading(false);
-      setIsLoggedIn(false);
-      return;
-    }
-    fetchProfile(token)
-      .then(() => {
-        setIsLoggedIn(true);
-        setLoading(false);
-      })
-      .catch(() => {
-        setIsLoggedIn(false);
-        setLoading(false);
-        setError('Invalid or expired token');
-        localStorage.removeItem('token');
-      });
-  }, []);
+  // If no token, not logged in and not loading
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (!token) {
+    return {
+      isLoggedIn: false,
+      loading: false,
+      error: null,
+    };
+  }
 
-  return { isLoggedIn, loading, error };
+  return {
+    isLoggedIn: !!profile,
+    loading: isLoading,
+    error: isError ? 'Invalid or expired token' : error,
+  };
 }

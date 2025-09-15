@@ -10,6 +10,8 @@ import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
 import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import Skeleton from '@mui/material/Skeleton';
 
 const drawerWidth = 240;
 
@@ -25,6 +27,7 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const { profile, isLoading } = useUserProfile();
   return (
     <Drawer
       variant="permanent"
@@ -66,19 +69,34 @@ export default function SideMenu() {
           borderColor: 'divider',
         }}
       >
-        <Avatar
-          sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
-          sx={{ width: 36, height: 36 }}
-        />
+        {isLoading ? (
+          <Skeleton variant="circular" width={36} height={36} />
+        ) : (
+          <Avatar
+            sizes="small"
+            alt={profile ? `${profile.firstname} ${profile.lastname}` : 'User Avatar'}
+            src="/logo/logo.svg"
+            sx={{ width: 36, height: 36 }}
+          />
+        )}
         <Box sx={{ mr: 'auto' }}>
-          <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-            Riley Carter
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            riley@email.com
-          </Typography>
+          {isLoading ? (
+            <>
+              <Skeleton variant="text" width={100} height={16} />
+              <Skeleton variant="text" width={120} height={12} />
+            </>
+          ) : profile ? (
+            <>
+              <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
+                {`${profile.firstname} ${profile.lastname}`}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {profile.email && profile.email.length > 20
+                  ? `${profile.email.slice(0, 17)}...`
+                  : profile.email}
+              </Typography>
+            </>
+          ) : null}
         </Box>
         <OptionsMenu />
       </Stack>

@@ -1,27 +1,23 @@
-import { useState } from 'react';
-import { login, LoginRequest, LoginResponse } from '../services/authService';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { login, LoginRequest, LoginResponse, ProfileResponse } from '../services/authService';
 
 export function useLogin() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<LoginResponse | null>(null);
-
-  const handleLogin = async (credentials: LoginRequest) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await login(credentials);
-      setData(res);
-      if (res.token) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', res.token);
-        }
+  const queryClient = useQueryClient();
+  const mutation = useMutation<ProfileResponse, unknown, LoginRequest>({
+    mutationFn: login,
+    onSuccess: (data) => {
+      if (data.data.token && typeof window !== 'undefined') {
+        localStorage.setItem('token', data.data.token);
       }
-      return res;
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Set user profile in React Query cache for global access
+      queryClient.setQueryData(['user-profile'], data);
+    },
+  });
 
-  return { login: handleLogin, loading, error, data };
+  return {
+    login: mutation.mutateAsync,
+    loading: mutation.isPending,
+    error: mutation.error ? (mutation.error as any).message || 'Login failed' : null,
+    data: mutation.data,
+  };
 }
