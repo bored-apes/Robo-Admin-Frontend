@@ -11,10 +11,10 @@ export default function CardAlert() {
       <CardContent>
         <AutoAwesomeRoundedIcon fontSize="small" />
         <Typography gutterBottom sx={{ fontWeight: 600 }}>
-          Your investment is less than everyone else's
+          Your investment is less than everyone else
         </Typography>
         <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-          Transfer to the company's wallet and fill up details.
+          Transfer to the company wallet and fill up details.
         </Typography>
         <Button variant="contained" size="small" fullWidth>
           New Entry ? Click Me

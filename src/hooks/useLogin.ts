@@ -17,7 +17,7 @@ export function useLogin() {
   return {
     login: mutation.mutateAsync,
     loading: mutation.isPending,
-    error: mutation.error ? (mutation.error as any).message || 'Login failed' : null,
+    error: mutation.error ? (mutation.error as Error).message || 'Login failed' : null,
     data: mutation.data,
   };
 }
