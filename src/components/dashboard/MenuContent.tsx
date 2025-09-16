@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -16,12 +17,12 @@ import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon /> },
-  { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Orders', icon: <PaidIcon /> },
-  { text: 'Users', icon: <PeopleRoundedIcon /> },
-  { text: 'Investments', icon: <AccountBalanceWalletIcon /> },
-  { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
+  { text: 'Home', icon: <HomeRoundedIcon />, route: '/' },
+  { text: 'Analytics', icon: <AnalyticsRoundedIcon />, route: '/analytics' },
+  { text: 'Orders', icon: <PaidIcon />, route: '/orders' },
+  { text: 'Users', icon: <PeopleRoundedIcon />, route: '/users' },
+  { text: 'Investments', icon: <AccountBalanceWalletIcon />, route: '/investments' },
+  { text: 'Tasks', icon: <AssignmentRoundedIcon />, route: '/tasks' },
 ];
 
 const secondaryListItems = [
@@ -31,12 +32,20 @@ const secondaryListItems = [
 ];
 
 export default function MenuContent() {
+  const router = useRouter();
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton selected={index === 0}>
+            <ListItemButton
+              selected={selectedIndex === index}
+              onClick={() => {
+                setSelectedIndex(index);
+                item.route && router.push(item.route);
+              }}
+            >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>

@@ -2,11 +2,21 @@
 import * as React from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import MuiRootLayout from '../layout/RootLayout';
+import AppTheme from '../shared-theme/AppTheme';
+import CssBaseline from '@mui/material/CssBaseline';
+import {
+  chartsCustomizations,
+  dataGridCustomizations,
+  datePickersCustomizations,
+  treeViewCustomizations,
+} from '../components/customizations';
 import AuthGuard from '../components/login/AuthGuard';
 import { usePathname } from 'next/navigation';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import SideMenu from '@/components/dashboard/SideMenu';
+import AppNavbar from '@/components/dashboard/AppNavbar';
+import { Box } from '@mui/material';
 
 // Expose QueryClient for TanStack Query Devtools
 declare global {
@@ -38,14 +48,29 @@ export default function RootLayout({
     window.__TANSTACK_QUERY_CLIENT__ = queryClient;
   }
 
+  const xThemeComponents = {
+    ...chartsCustomizations,
+    ...dataGridCustomizations,
+    ...datePickersCustomizations,
+    ...treeViewCustomizations,
+  };
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <MuiRootLayout>
+        <AppTheme themeComponents={xThemeComponents}>
+          <CssBaseline enableColorScheme />
           <QueryClientProvider client={queryClient}>
-            {isLogin ? children : <AuthGuard>{children}</AuthGuard>}
+            {isLogin ? (
+              children
+            ) : (
+              <Box sx={{ display: 'flex' }}>
+                <SideMenu />
+                <AppNavbar />
+                <AuthGuard>{children}</AuthGuard>
+              </Box>
+            )}
           </QueryClientProvider>
-        </MuiRootLayout>
+        </AppTheme>
       </body>
     </html>
   );
