@@ -1,9 +1,12 @@
 'use client';
-import AppNavbar from '@/components/dashboard/AppNavbar';
-import SideMenu from '@/components/dashboard/SideMenu';
-import { Box, CssBaseline } from '@mui/material';
 import * as React from 'react';
+import InvestmentsTable from './view/InvestmentTable';
+import NewEntry from './view/NewEntry';
 
-export default function InvestmentPage() {
-  return <>Coming Soon</>;
+export default function Page() {
+  return (
+    <>
+      <InvestmentsTable />
+    </>
+  );
 }

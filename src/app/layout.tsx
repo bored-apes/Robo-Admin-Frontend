@@ -16,7 +16,8 @@ import { usePathname } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SideMenu from '@/components/dashboard/SideMenu';
 import AppNavbar from '@/components/dashboard/AppNavbar';
-import { Box } from '@mui/material';
+import { alpha, Box, Stack } from '@mui/material';
+import Header from '@/components/dashboard/Header';
 
 // Expose QueryClient for TanStack Query Devtools
 declare global {
@@ -66,7 +67,29 @@ export default function RootLayout({
               <Box sx={{ display: 'flex' }}>
                 <SideMenu />
                 <AppNavbar />
-                <AuthGuard>{children}</AuthGuard>
+                <Box
+                  component="main"
+                  sx={(theme) => ({
+                    flexGrow: 1,
+                    backgroundColor: theme.vars
+                      ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
+                      : alpha(theme.palette.background.default, 1),
+                    overflow: 'auto',
+                  })}
+                >
+                  <Stack
+                    spacing={2}
+                    sx={{
+                      alignItems: 'center',
+                      mx: 3,
+                      pb: 5,
+                      mt: { xs: 8, md: 0 },
+                    }}
+                  >
+                    <Header />
+                    <AuthGuard>{children}</AuthGuard>
+                  </Stack>
+                </Box>
               </Box>
             )}
           </QueryClientProvider>

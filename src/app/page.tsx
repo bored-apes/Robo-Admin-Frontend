@@ -1,7 +1,7 @@
 'use client';
+import MainGrid from '@/components/dashboard/MainGrid';
 import * as React from 'react';
-import Dashboard from '@/app/dashboard/view/Dashboard';
 
 export default function HomePage() {
-  return <Dashboard />;
+  return <MainGrid />;
 }
