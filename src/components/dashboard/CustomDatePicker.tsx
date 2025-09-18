@@ -35,15 +35,30 @@ function ButtonField(props: ButtonFieldProps) {
   );
 }
 
-export default function CustomDatePicker() {
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs('2023-04-17'));
+interface CustomDatePickerProps {
+  value?: Dayjs | null;
+  onChange?: (date: Dayjs | null) => void;
+}
+
+export default function CustomDatePicker({ value, onChange }: CustomDatePickerProps) {
+  // If value is undefined, default to today
+  const [internalValue, setInternalValue] = React.useState<Dayjs | null>(value ?? dayjs());
+
+  React.useEffect(() => {
+    if (value !== undefined) {
+      setInternalValue(value);
+    }
+  }, [value]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
-        value={value}
-        label={value == null ? null : value.format('MMM DD, YYYY')}
-        onChange={(newValue) => setValue(newValue)}
+        value={internalValue}
+        label={internalValue == null ? null : internalValue.format('MMM DD, YYYY')}
+        onChange={(newValue) => {
+          setInternalValue(newValue);
+          if (onChange) onChange(newValue);
+        }}
         slots={{ field: ButtonField }}
         slotProps={{
           nextIconButton: { size: 'small' },

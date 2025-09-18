@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import { createInvestment } from '@/services/investmentService';
 import {
   TextField,
   Button,
@@ -15,45 +17,12 @@ import {
   Divider,
 } from '@mui/material';
 import CustomDatePicker from '../../../components/dashboard/CustomDatePicker';
-
-enum ExpenseCategoryEnum {
-  Samples_ProductTesting = 'Samples/Product Testing',
-  StockPurchase_ChinaImports = 'Stock Purchase/China Imports',
-  Website_Domain_Hosting = 'Website/Domain/Hosting',
-  GST_CA_ConsultantFees = 'GST/CA/Consultant Fees',
-  Warehouse_GodownRent = 'Warehouse/Godown Rent',
-  Machinery_Tools = 'Machinery/Tools',
-  Transport_PetrolDiesel_LocalDelivery = 'Transport/Petrol/Diesel/Local Delivery',
-  Designs_Branding_Labels = 'Designs/Branding/Labels',
-  Marketing_Advertising_Online_Offline = 'Marketing/Advertising Online/Offline',
-  OfficeExpenses_Stationery_Electricity_Internet = 'Office Expenses/Stationery/Electricity/Internet',
-  PackagingMaterial = 'Packaging Material',
-  StaffSalary_LabourCharges = 'Staff Salary/Labour Charges',
-  Bills_Electricity_Phone_Water = 'Bills/Electricity/Phone/Water',
-  CompanyRegistration_LegalFees = 'Company Registration/Legal Fees',
-  BankCharges_ForexFees = 'Bank Charges/Forex Fees',
-  CustomerRefunds_Returns = 'Customer Refunds/Returns',
-  Add_CompanyBalance = 'Added Into Company Balance',
-  Other_Miscellaneous = 'Other/Miscellaneous',
-}
-
-enum ModeOfPaymentEnum {
-  UPI = 'UPI',
-  Cash = 'Cash',
-  Card = 'Card',
-  BankTransfer = 'Bank Transfer',
-  NetBanking = 'Net Banking',
-  WireTransfer = 'Wire Transfer',
-  Paypal = 'Paypal',
-  Cheque = 'Cheque',
-  DemandDraft = 'Demand Draft',
-  NEFT = 'NEFT',
-  RTGS = 'RTGS',
-  IMPS = 'IMPS',
-  Other = 'Other',
-}
-
-const payers = ['Bhargav', 'Jay', 'Shivam', 'Sahil', 'Company'];
+import {
+  ExpenseCategoryEnum,
+  InvestmentCreateRequest,
+  ModeOfPaymentEnum,
+  PayerEnum,
+} from '@/types/investmentTypes';
 
 interface NewEntryProps {
   open: boolean;
@@ -61,7 +30,7 @@ interface NewEntryProps {
 }
 
 const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
-  const [date, setDate] = useState<Date | null>(null);
+  const [date, setDate] = useState<Date | null>(new Date());
   const [category, setCategory] = useState('');
   const [paymentMode, setPaymentMode] = useState('');
   const [payer, setPayer] = useState('');
@@ -77,9 +46,40 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
     setDescription('');
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save logic here
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    // Validate required fields
+    console.log({ date, category, paymentMode, payer, amount, description });
+    if (!date || !category || !paymentMode || !payer || !amount || !description) {
+      setError('Please fill all required fields.');
+      setLoading(false);
+      return;
+    }
+    const payload: InvestmentCreateRequest = {
+      paymentDate: date,
+      amount: Number(amount),
+      modeOfPayment: paymentMode as ModeOfPaymentEnum,
+      category: category as ExpenseCategoryEnum,
+      payer: payer as PayerEnum,
+      description: description || null,
+    };
+    try {
+      await createInvestment(payload);
+      setSuccess(true);
+      handleReset();
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create investment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,6 +95,16 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
       </DialogTitle>
 
       <DialogContent sx={{ backgroundColor: 'background.paper', p: 3 }}>
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+        {success && (
+          <Typography color="primary" sx={{ mb: 2 }}>
+            Investment entry created successfully!
+          </Typography>
+        )}
         <Box
           component="form"
           sx={{
@@ -108,7 +118,10 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
               Date
             </Typography>
-            <CustomDatePicker />
+            <CustomDatePicker
+              value={date ? dayjs(date) : undefined}
+              onChange={(d) => setDate(d ? d.toDate() : null)}
+            />
           </Box>
 
           <Divider />
@@ -138,7 +151,7 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
                 onChange={(e) => setCategory(e.target.value)}
               >
                 {Object.entries(ExpenseCategoryEnum).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>
+                  <MenuItem key={value} value={key}>
                     {value}
                   </MenuItem>
                 ))}
@@ -164,7 +177,7 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
                 onChange={(e) => setPaymentMode(e.target.value)}
               >
                 {Object.entries(ModeOfPaymentEnum).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>
+                  <MenuItem key={value} value={key}>
                     {value}
                   </MenuItem>
                 ))}
@@ -185,9 +198,9 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
                 Payer
               </InputLabel>
               <Select value={payer} label="Payer" onChange={(e) => setPayer(e.target.value)}>
-                {payers.map((p) => (
-                  <MenuItem key={p} value={p}>
-                    {p}
+                {Object.entries(PayerEnum).map(([key, value]) => (
+                  <MenuItem key={value} value={key}>
+                    {value}
                   </MenuItem>
                 ))}
               </Select>
@@ -243,8 +256,14 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
       </DialogContent>
 
       <DialogActions sx={{ backgroundColor: 'background.paper', p: 2 }}>
-        <Button onClick={handleSave} variant="contained" color="primary" sx={{ borderRadius: 2 }}>
-          Save
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: 2 }}
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : 'Save'}
         </Button>
         <Button onClick={handleReset} variant="outlined" color="secondary" sx={{ borderRadius: 2 }}>
           Reset
