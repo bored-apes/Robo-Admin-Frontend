@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchProfile, ProfileResponse } from '../services/authService';
+import { fetchProfile } from '../services/authService';
+import { ProfileResponse } from '@/types/authTypes';
 
 export function useUserProfile() {
   const queryClient = useQueryClient();
