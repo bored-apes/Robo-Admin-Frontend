@@ -75,8 +75,12 @@ const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
       setSuccess(true);
       handleReset();
       onClose();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create investment.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to create investment.');
+      }
     } finally {
       setLoading(false);
     }
