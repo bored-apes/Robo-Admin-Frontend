@@ -15,11 +15,13 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import InventoryIcon from '@mui/icons-material/Inventory';
 
 const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon />, route: '/' },
   { text: 'Analytics', icon: <AnalyticsRoundedIcon />, route: '/analytics' },
   { text: 'Orders', icon: <PaidIcon />, route: '/orders' },
+  { text: 'Products', icon: <InventoryIcon />, route: '/products' },
   { text: 'Users', icon: <PeopleRoundedIcon />, route: '/users' },
   { text: 'Investments', icon: <AccountBalanceWalletIcon />, route: '/investments' },
   { text: 'Tasks', icon: <AssignmentRoundedIcon />, route: '/tasks' },
