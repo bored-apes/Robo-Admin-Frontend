@@ -20,6 +20,11 @@ interface SideMenuMobileProps {
 }
 
 export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobileProps) {
+  // SSR hydration fix: only show loaded content after client mount
+  const [hasMounted, setHasMounted] = React.useState(false);
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
   const { profile, isLoading } = useUserProfile();
   const router = useRouter();
   const handleLogout = () => {
@@ -47,7 +52,8 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
       >
         <Stack direction="row" sx={{ p: 2, pb: 0, gap: 1 }}>
           <Stack direction="row" sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}>
-            {isLoading ? (
+            {/* Hydration fix: always render Skeleton until client mount */}
+            {!hasMounted || isLoading ? (
               <Skeleton variant="circular" width={24} height={24} />
             ) : (
               <Avatar
@@ -57,7 +63,8 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
                 sx={{ width: 32, height: 32 }}
               />
             )}
-            {isLoading ? (
+            {/* Hydration fix: always render Skeleton until client mount */}
+            {!hasMounted || isLoading ? (
               <Skeleton variant="text" width={80} height={20} />
             ) : profile ? (
               <Typography component="p" variant="h6">

@@ -28,6 +28,11 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu() {
   const { profile, isLoading } = useUserProfile();
+  // SSR hydration fix: only show loaded content after client mount
+  const [hasMounted, setHasMounted] = React.useState(false);
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
   return (
     <Drawer
       variant="permanent"
@@ -69,7 +74,8 @@ export default function SideMenu() {
           borderColor: 'divider',
         }}
       >
-        {isLoading ? (
+        {/* Hydration fix: always render Skeleton until client mount */}
+        {!hasMounted || isLoading ? (
           <Skeleton variant="circular" width={36} height={36} />
         ) : (
           <Avatar
@@ -80,7 +86,8 @@ export default function SideMenu() {
           />
         )}
         <Box sx={{ mr: 'auto' }}>
-          {isLoading ? (
+          {/* Only render profile info after mount and loading is false, else always Skeletons */}
+          {!hasMounted || isLoading ? (
             <>
               <Skeleton variant="text" width={100} height={16} />
               <Skeleton variant="text" width={120} height={12} />

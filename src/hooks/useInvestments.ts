@@ -1,20 +1,7 @@
 // useInvestments.ts
 import { useEffect, useState } from 'react';
 import { fetchInvestments } from '../services/investmentService';
-
-export interface Investment {
-  id: number;
-  paymentDate: string;
-  amount: number;
-  modeOfPayment: string;
-  category: string;
-  payer: string;
-  description: string;
-  createdBy: string;
-  createdAt: string;
-  updatedBy: string;
-  updatedAt: string;
-}
+import { Investment } from '@/types/investmentTypes';
 
 export function useInvestments() {
   const [investments, setInvestments] = useState<Investment[]>([]);

@@ -41,12 +41,14 @@ interface CustomDatePickerProps {
 }
 
 export default function CustomDatePicker({ value, onChange }: CustomDatePickerProps) {
-  // If value is undefined, default to today
-  const [internalValue, setInternalValue] = React.useState<Dayjs | null>(value ?? dayjs());
+  // Avoid SSR hydration mismatch by initializing with null, then setting to today on client
+  const [internalValue, setInternalValue] = React.useState<Dayjs | null>(value ?? null);
 
   React.useEffect(() => {
     if (value !== undefined) {
       setInternalValue(value);
+    } else {
+      setInternalValue(dayjs());
     }
   }, [value]);
 

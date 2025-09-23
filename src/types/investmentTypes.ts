@@ -43,6 +43,13 @@ export enum PayerEnum {
   Company = 'Company',
 }
 
+export enum OwnerEnum {
+  Bhargav = 'Bhargav',
+  Jay = 'Jay',
+  Shivam = 'Shivam',
+  Sahil = 'Sahil',
+}
+
 export interface InvestmentCreateRequest {
   paymentDate: Date;
   amount: number;
@@ -50,4 +57,18 @@ export interface InvestmentCreateRequest {
   category: ExpenseCategoryEnum;
   payer: PayerEnum;
   description: string | null;
+}
+
+export interface Investment {
+  id: number;
+  paymentDate: string;
+  amount: number;
+  modeOfPayment: string;
+  category: string;
+  payer: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
 }

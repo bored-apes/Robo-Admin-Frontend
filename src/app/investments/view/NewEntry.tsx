@@ -30,7 +30,10 @@ interface NewEntryProps {
 }
 
 const NewEntry: React.FC<NewEntryProps> = ({ open, onClose }) => {
-  const [date, setDate] = useState<Date | null>(new Date());
+  const [date, setDate] = useState<Date | null>(null);
+  React.useEffect(() => {
+    setDate(new Date());
+  }, []);
   const [category, setCategory] = useState('');
   const [paymentMode, setPaymentMode] = useState('');
   const [payer, setPayer] = useState('');
