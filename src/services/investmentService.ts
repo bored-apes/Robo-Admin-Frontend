@@ -13,3 +13,16 @@ export function createInvestment(data: InvestmentCreateRequest) {
     body: JSON.stringify(data),
   });
 }
+
+export function updateInvestment(id: number, data: Partial<InvestmentCreateRequest>) {
+  return apiFetch<string>(`/investment/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteInvestment(id: number) {
+  return apiFetch<string>(`/investment/${id}`, {
+    method: 'DELETE',
+  });
+}
