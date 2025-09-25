@@ -14,7 +14,7 @@ import {
   DialogActions,
   Button,
   TextField,
-  Grid,
+  Stack,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -226,8 +226,8 @@ export default function InvestmentsTable() {
       <Dialog open={editModalOpen} onClose={handleEditClose} maxWidth="md" fullWidth>
         <DialogTitle>Edit Investment</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
               <TextField
                 fullWidth
                 label="Payment Date"
@@ -249,9 +249,7 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
 
-            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -272,9 +270,9 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
               <TextField
                 fullWidth
                 label="Mode of Payment"
@@ -294,9 +292,7 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
 
-            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Payer"
@@ -316,9 +312,9 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
               <TextField
                 fullWidth
                 label="Category"
@@ -338,9 +334,7 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
 
-            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Description"
@@ -360,8 +354,8 @@ export default function InvestmentsTable() {
                   },
                 }}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditClose}>Cancel</Button>
