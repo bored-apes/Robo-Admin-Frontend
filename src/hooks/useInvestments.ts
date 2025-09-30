@@ -38,7 +38,7 @@ export function useInvestments() {
   const updateInvestment = useCallback(
     async (id: number, data: Partial<Investment>) => {
       // Only send fields expected by backend
-      const mappedData: any = {};
+      const mappedData: Partial<Investment> = {};
       if (data.paymentDate) {
         mappedData.paymentDate = new Date(data.paymentDate);
       }

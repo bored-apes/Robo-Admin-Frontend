@@ -1,6 +1,16 @@
 'use client';
 import { useInvestments } from '@/hooks/useInvestments';
 import * as React from 'react';
+
+type Investment = {
+  id: number;
+  paymentDate: string;
+  amount: number;
+  modeOfPayment: string;
+  category: string;
+  payer: string;
+  description: string;
+};
 import DataTable from '@/components/investment/DataTable';
 import type { GridCellParams } from '@mui/x-data-grid';
 import { formatDateHumanReadable } from '@/utils/date';
@@ -18,6 +28,7 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 
 const columns = [
   {
@@ -42,7 +53,7 @@ export default function InvestmentsTable() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteTargetId, setDeleteTargetId] = React.useState<number | null>(null);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
-  const [selectedInvestment, setSelectedInvestment] = React.useState<any>(null);
+  const [selectedInvestment, setSelectedInvestment] = React.useState<Investment | null>(null);
 
   const [editFormData, setEditFormData] = React.useState({
     paymentDate: '',
@@ -59,7 +70,7 @@ export default function InvestmentsTable() {
     severity: 'success' as 'success' | 'error',
   });
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: Investment) => {
     setSelectedInvestment(row);
     setEditFormData({
       paymentDate: row.paymentDate ? new Date(row.paymentDate).toISOString().split('T')[0] : '',
@@ -234,18 +245,20 @@ export default function InvestmentsTable() {
                 type="date"
                 value={editFormData.paymentDate}
                 onChange={handleInputChange('paymentDate')}
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    color: '#fff',
-                    fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
-                    fontWeight: 500,
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                    style: {
+                      color: '#fff',
+                      fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
+                      fontWeight: 500,
+                    },
                   },
-                }}
-                InputProps={{
-                  style: {
-                    color: '#fff',
-                    fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
+                  input: {
+                    style: {
+                      color: '#fff',
+                      fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
+                    },
                   },
                 }}
               />
@@ -256,17 +269,13 @@ export default function InvestmentsTable() {
                 type="number"
                 value={editFormData.amount}
                 onChange={handleInputChange('amount')}
-                InputLabelProps={{
-                  style: {
-                    color: '#fff',
-                    fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
-                    fontWeight: 500,
-                  },
-                }}
-                InputProps={{
-                  style: {
-                    color: '#fff',
-                    fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
+                slotProps={{
+                  inputLabel: {
+                    style: {
+                      color: '#fff',
+                      fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
+                      fontWeight: 500,
+                    },
                   },
                 }}
               />
@@ -283,12 +292,6 @@ export default function InvestmentsTable() {
                     color: '#fff',
                     fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
                     fontWeight: 500,
-                  },
-                }}
-                InputProps={{
-                  style: {
-                    color: '#fff',
-                    fontFamily: 'var(--font-geist-sans, Arial, sans-serif)',
                   },
                 }}
               />

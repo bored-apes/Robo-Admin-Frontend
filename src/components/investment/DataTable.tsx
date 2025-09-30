@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { Investment } from '@/types/investmentTypes';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
@@ -11,7 +12,7 @@ export interface DataTableProps {
   rows: object[];
   pageSizeOptions?: number[];
   height?: number;
-  onEdit?: (row: any) => void;
+  onEdit?: (row: Investment) => void;
   onDelete?: (id: number) => void;
   deleting?: number | null;
 }
