@@ -90,7 +90,7 @@ Based on the Prisma schema, products have the following fields:
 - `gst_rate`: GST percentage
 - `min_order_qty`: Minimum order quantity
 - `stock_quantity`: Available stock
-- `image_url`: Product image URL
+- `image_urls`: Array of product image URLs
 - `status`: Product status (Active, Inactive, OutOfStock)
 - `created_at`: Creation timestamp
 - `average_rating`: Average customer rating

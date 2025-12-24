@@ -9,12 +9,29 @@ export interface UploadResponse {
     originalName: string;
     mimeType: string;
     size: number;
-    urls: {
+    urls?: {
       viewUrl: string;
       downloadUrl: string;
       directUrl: string;
     };
     imageUrl: string; // Primary URL for display
+  };
+  error?: string;
+}
+
+export interface MultipleUploadResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    images: Array<{
+      fileId: string;
+      fileName: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+      imageUrl: string;
+    }>;
+    imageUrls: string[];
   };
   error?: string;
 }
@@ -147,6 +164,55 @@ class UploadService {
   isValidImageFile(file: File): boolean {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     return validTypes.includes(file.type);
+  }
+
+  // Upload multiple image files
+  async uploadMultipleImages(
+    files: File[],
+    folder: string = 'uploads',
+    entityId?: string | number,
+  ): Promise<MultipleUploadResponse> {
+    try {
+      if (!files || files.length === 0) {
+        throw new Error('No files selected');
+      }
+
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+      formData.append('folder', folder);
+
+      if (entityId) {
+        formData.append('entityId', entityId.toString());
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/common/upload-multiple`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error: any) {
+      console.error('Multiple upload error:', error);
+      return {
+        success: false,
+        message: error.message || 'Upload failed',
+        error: error.message,
+      };
+    }
   }
 
   // Helper method to format file size

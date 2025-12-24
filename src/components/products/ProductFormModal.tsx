@@ -31,6 +31,7 @@ import {
 } from '../../types/productTypes';
 import { uploadService } from '../../services/uploadService';
 import { validateProduct } from '../../utils/productUtils';
+import { normalizeImageUrls } from '../../utils/imageUtils';
 import { FormCard } from '../common';
 import ProductImage from './ProductImage';
 
@@ -58,18 +59,28 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     gst_rate: 18,
     min_order_qty: 1,
     stock_quantity: 0,
-    image_url: '',
+    image_urls: [],
     status: ProductStatusEnum.Active,
   });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]); // Normalized URLs for display
+  const [originalImageUrls, setOriginalImageUrls] = useState<string[]>([]); // Original URLs for form data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (product && mode === 'edit') {
+      // Get existing images from product and normalize URLs for display
+      const rawImages = Array.isArray(product.image_urls)
+        ? product.image_urls
+        : product.image_urls
+          ? [product.image_urls]
+          : [];
+      const normalizedImages = normalizeImageUrls(rawImages);
+
       setFormData({
         name: product.name || '',
         description: product.description || '',
@@ -79,10 +90,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         gst_rate: product.gst_rate || 18,
         min_order_qty: product.min_order_qty || 1,
         stock_quantity: product.stock_quantity || 0,
-        image_url: product.image_url || '',
+        image_urls: rawImages, // Store original URLs
         status: product.status || ProductStatusEnum.Active,
       });
-      setImagePreview(product.image_url || '');
+      setExistingImages(normalizedImages); // Use normalized URLs for display
+      setOriginalImageUrls(rawImages); // Store original URLs for removal logic
+      setImagePreviews([]);
     } else {
       // Reset form for create mode
       setFormData({
@@ -94,12 +107,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         gst_rate: 18,
         min_order_qty: 1,
         stock_quantity: 0,
-        image_url: '',
+        image_urls: [],
         status: ProductStatusEnum.Active,
       });
-      setImagePreview('');
+      setExistingImages([]);
+      setOriginalImageUrls([]);
+      setImagePreviews([]);
     }
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setError('');
   }, [product, mode, open]);
 
@@ -111,19 +126,56 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith('image/')) {
-        setSelectedFile(file);
-        // Create preview
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate all files are images
+    const invalidFiles = files.filter((file) => !file.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      setError('Please select only image files');
+      return;
+    }
+
+    // Limit to 10 files
+    if (files.length > 10) {
+      setError('Maximum 10 images allowed');
+      return;
+    }
+
+    setSelectedFiles(files);
+    setError('');
+
+    // Create previews for all selected files
+    const previewPromises = files.map((file) => {
+      return new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
-          setImagePreview(reader.result as string);
+          resolve(reader.result as string);
         };
         reader.readAsDataURL(file);
-      } else {
-        setError('Please select a valid image file');
-      }
+      });
+    });
+
+    Promise.all(previewPromises).then((previews) => {
+      setImagePreviews(previews);
+    });
+  };
+
+  const handleRemoveImage = (index: number, isExisting: boolean = false) => {
+    if (isExisting) {
+      const updatedDisplay = existingImages.filter((_, i) => i !== index);
+      const updatedOriginal = originalImageUrls.filter((_, i) => i !== index);
+      setExistingImages(updatedDisplay);
+      setOriginalImageUrls(updatedOriginal);
+      setFormData((prev) => ({
+        ...prev,
+        image_urls: updatedOriginal,
+      }));
+    } else {
+      const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+      const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+      setSelectedFiles(updatedFiles);
+      setImagePreviews(updatedPreviews);
     }
   };
 
@@ -139,28 +191,31 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         return;
       }
 
-      let imageUrl = formData.image_url;
+      let imageUrls = originalImageUrls;
 
-      // Upload image if a new file is selected
-      if (selectedFile) {
+      // Upload new images if files are selected
+      if (selectedFiles.length > 0) {
         setUploadingImage(true);
         try {
-          // Generate a temporary product ID for new products or use existing product ID
           const entityId = product?.id || `temp_${Date.now()}`;
-          const uploadResult = await uploadService.uploadImage(selectedFile, 'products', entityId);
+          const uploadResult = await uploadService.uploadMultipleImages(
+            selectedFiles,
+            'products',
+            entityId,
+          );
 
           if (uploadResult.success && uploadResult.data) {
-            imageUrl = uploadResult.data.imageUrl;
-            console.log('Image uploaded successfully:', imageUrl);
-            // Update the preview immediately
-            setImagePreview(imageUrl);
+            const newImageUrls = uploadResult.data.imageUrls || [];
+            // Combine existing and new images
+            imageUrls = [...originalImageUrls, ...newImageUrls];
+            console.log(`${newImageUrls.length} image(s) uploaded successfully`);
           } else {
             throw new Error(uploadResult.message || 'Upload failed');
           }
         } catch (uploadError) {
           console.error('Image upload failed:', uploadError);
-          setError('Failed to upload image. Product will be saved without image.');
-          // Continue with form submission even if image upload fails
+          setError('Failed to upload images. Product will be saved with existing images only.');
+          // Continue with form submission with existing images
         } finally {
           setUploadingImage(false);
         }
@@ -168,7 +223,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
       const submitData: ProductInput = {
         ...formData,
-        image_url: imageUrl,
+        image_urls: imageUrls.length > 0 ? imageUrls : null,
         base_price: Number(formData.base_price),
         gst_rate: Number(formData.gst_rate),
         min_order_qty: Number(formData.min_order_qty),
@@ -355,69 +410,166 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </FormCard>
             </Box>
 
-            {/* Product Image Card - Right side on desktop */}
+            {/* Product Images Card - Right side on desktop */}
             <Box sx={{ flex: 1, minWidth: { xs: '100%', md: '300px' } }}>
-              <FormCard title="Product Image" icon={ImageIcon}>
-                <Stack spacing={2} alignItems="center">
-                  {imagePreview ? (
-                    <Box
-                      sx={{
-                        width: '100%',
-                        maxWidth: 280,
-                        aspectRatio: '1/1',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <img
-                        src={imagePreview}
-                        alt="Product preview"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                        onError={() => setImagePreview('')}
-                      />
-                    </Box>
-                  ) : (
-                    <Box
-                      sx={{
-                        width: '100%',
-                        maxWidth: 280,
-                        aspectRatio: '1/1',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'grey.50',
-                        borderRadius: 2,
-                        border: '2px dashed',
-                        borderColor: 'grey.300',
-                      }}
-                    >
-                      <ImageIcon sx={{ fontSize: 60, color: 'grey.400' }} />
+              <FormCard title="Product Images" icon={ImageIcon}>
+                <Stack spacing={2}>
+                  {/* Existing Images */}
+                  {existingImages.length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Existing Images ({existingImages.length})
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {existingImages.map((url, index) => (
+                          <Grid item xs={6} sm={4} key={`existing-${index}`}>
+                            <Box
+                              sx={{
+                                position: 'relative',
+                                width: '100%',
+                                aspectRatio: '1/1',
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                            >
+                              <img
+                                src={url}
+                                alt={`Product ${index + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/placeholder.svg';
+                                }}
+                              />
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="error"
+                                sx={{
+                                  position: 'absolute',
+                                  top: 4,
+                                  right: 4,
+                                  minWidth: 'auto',
+                                  width: 24,
+                                  height: 24,
+                                  p: 0,
+                                }}
+                                onClick={() => handleRemoveImage(index, true)}
+                              >
+                                ×
+                              </Button>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
                     </Box>
                   )}
 
+                  {/* New Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        New Images ({imagePreviews.length})
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {imagePreviews.map((preview, index) => (
+                          <Grid item xs={6} sm={4} key={`preview-${index}`}>
+                            <Box
+                              sx={{
+                                position: 'relative',
+                                width: '100%',
+                                aspectRatio: '1/1',
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                            >
+                              <img
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                }}
+                              />
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="error"
+                                sx={{
+                                  position: 'absolute',
+                                  top: 4,
+                                  right: 4,
+                                  minWidth: 'auto',
+                                  width: 24,
+                                  height: 24,
+                                  p: 0,
+                                }}
+                                onClick={() => handleRemoveImage(index, false)}
+                              >
+                                ×
+                              </Button>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  )}
+
+                  {/* Upload Button */}
                   <Button
                     variant="outlined"
                     component="label"
                     startIcon={<CloudUpload />}
-                    disabled={uploadingImage}
+                    disabled={uploadingImage || existingImages.length + imagePreviews.length >= 10}
                     size="small"
                     fullWidth
                   >
-                    {uploadingImage ? 'Uploading...' : 'Select Image'}
-                    <input type="file" hidden accept="image/*" onChange={handleFileSelect} />
+                    {uploadingImage
+                      ? 'Uploading...'
+                      : `Select Images (${existingImages.length + imagePreviews.length}/10)`}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      disabled={
+                        uploadingImage || existingImages.length + imagePreviews.length >= 10
+                      }
+                    />
                   </Button>
 
-                  {selectedFile && (
+                  {selectedFiles.length > 0 && (
                     <Typography variant="body2" color="primary" align="center">
-                      New image selected: {selectedFile.name}
+                      {selectedFiles.length} new image(s) selected
                     </Typography>
+                  )}
+
+                  {existingImages.length === 0 && imagePreviews.length === 0 && (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        aspectRatio: '1/1',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '2px dashed',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        bgcolor: 'grey.50',
+                      }}
+                    >
+                      <ImageIcon sx={{ fontSize: 60, color: 'grey.400' }} />
+                    </Box>
                   )}
                 </Stack>
               </FormCard>

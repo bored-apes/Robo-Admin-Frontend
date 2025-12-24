@@ -34,7 +34,7 @@ export interface Product {
   gst_rate?: number | null;
   min_order_qty?: number | null;
   stock_quantity?: number | null;
-  image_url?: string | null;
+  image_urls?: string[] | null;
   status: ProductStatusEnum;
   created_at: string;
   average_rating?: number | null;
@@ -50,7 +50,7 @@ export interface ProductInput {
   gst_rate?: number;
   min_order_qty?: number;
   stock_quantity?: number;
-  image_url?: string | null;
+  image_urls?: string[] | null;
   status?: ProductStatusEnum;
 }
 

@@ -161,14 +161,16 @@ const ProductsTable: React.FC<ProductsTableProps> = () => {
       width: 80,
     },
     {
-      field: 'image_url',
+      field: 'image_urls',
       headerName: 'Image',
       width: 100,
       sortable: false,
       filterable: false,
-      renderCell: (params) => (
-        <ProductImage imageUrl={params.value} showZoom={false} width={60} height={60} />
-      ),
+      renderCell: (params) => {
+        const imageUrls = params.value;
+        const firstImage = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[0] : null;
+        return <ProductImage imageUrl={firstImage} showZoom={false} width={60} height={60} />;
+      },
     },
     {
       field: 'name',
